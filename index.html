@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Prompt Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #334155;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e1;
+            background-color: #ffffff;
+            font-size: 1rem;
+            color: #1a202c;
+            transition: border-color 0.2s ease-in-out;
+        }
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Blue-500 with opacity */
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* Blue-500 */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* Blue-600 */
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .output-area {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            min-height: 120px;
+            font-size: 1rem;
+            color: #1a202c;
+            white-space: pre-wrap; /* Ensures line breaks are preserved */
+            word-break: break-word; /* Prevents long words from overflowing */
+            position: relative;
+            margin-bottom: 1.5rem; /* Add margin between output areas */
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #60a5fa; /* Blue-400 */
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            background-color: #3b82f6; /* Blue-500 */
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50; /* Green */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.show {
+            display: block;
+            opacity: 1;
+        }
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .loading-indicator.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="container mx-auto bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-lg border border-gray-200">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-8 text-gray-800">AI Image Prompt Generator</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Subject/Main Object -->
+            <div class="input-group">
+                <label for="subject" class="block text-sm mb-2">Subjek/Objek Utama:</label>
+                <input type="text" id="subject" placeholder="Contoh: Kucing, Pohon Tua, Kota Masa Depan" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Style -->
+            <div class="input-group">
+                <label for="style" class="block text-sm mb-2">Gaya Artistik:</label>
+                <input type="text" id="style" placeholder="Contoh: Photorealistic, Oil Painting, Anime, Cyberpunk" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Action/Setting -->
+            <div class="input-group">
+                <label for="actionSetting" class="block text-sm mb-2">Aksi/Pengaturan (Latar Belakang):</label>
+                <input type="text" id="actionSetting" placeholder="Contoh: Melompat di atas awan, Hutan berkabut, Jalanan kota di malam hari" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Lighting -->
+            <div class="input-group">
+                <label for="lighting" class="block text-sm mb-2">Pencahayaan:</label>
+                <input type="text" id="lighting" placeholder="Contoh: Golden hour, Neon lights, Soft studio light" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Atmosphere/Mood -->
+            <div class="input-group">
+                <label for="atmosphere" class="block text-sm mb-2">Suasana/Mood:</label>
+                <input type="text" id="atmosphere" placeholder="Contoh: Tenang, Misterius, Futuristik, Epik" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Camera Angle/Shot -->
+            <div class="input-group">
+                <label for="camera" class="block text-sm mb-2">Sudut Kamera/Jenis Bidikan:</label>
+                <input type="text" id="camera" placeholder="Contoh: Wide shot, Close-up, Low angle, Aerial view" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Details/Elements -->
+            <div class="input-group md:col-span-2">
+                <label for="details" class="block text-sm mb-2">Detail/Elemen Tambahan:</label>
+                <textarea id="details" rows="3" placeholder="Contoh: Daun berguguran, Robot kecil terbang, Refleksi di genangan air" class="resize-y focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+
+            <!-- Artist/Reference (Optional) -->
+            <div class="input-group">
+                <label for="artist" class="block text-sm mb-2">Artis/Referensi (Opsional):</label>
+                <input type="text" id="artist" placeholder="Contoh: by Greg Rutkowski, in the style of Studio Ghibli" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Quality/Resolution (Optional) -->
+            <div class="input-group">
+                <label for="quality" class="block text-sm mb-2">Kualitas/Resolusi (Opsional):</label>
+                <input type="text" id="quality" placeholder="Contoh: 4K, Ultra detailed, Masterpiece, Trending on Artstation" class="focus:ring-blue-500 focus:border-blue-500">
+            </div>
+        </div>
+
+        <div class="text-center mb-8">
+            <button id="generateBtn" class="btn-primary">Buat Prompt</button>
+        </div>
+
+        <div id="loadingIndicator" class="loading-indicator">Menerjemahkan prompt...</div>
+
+        <!-- Indonesian Prompt Output -->
+        <div class="output-area relative">
+            <label class="block text-sm font-semibold mb-2 text-gray-800">Prompt Final (Bahasa Indonesia):</label>
+            <div id="finalPromptId" class="text-gray-700">Prompt Anda akan muncul di sini...</div>
+            <button id="copyBtnId" class="copy-btn">Salin</button>
+        </div>
+
+        <!-- English Prompt Output -->
+        <div class="output-area relative">
+            <label class="block text-sm font-semibold mb-2 text-gray-800">Final Prompt (English):</label>
+            <div id="finalPromptEn" class="text-gray-700">Your prompt will appear here...</div>
+            <button id="copyBtnEn" class="copy-btn">Copy</button>
+        </div>
+    </div>
+
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const subjectInput = document.getElementById('subject');
+            const styleInput = document.getElementById('style');
+            const actionSettingInput = document.getElementById('actionSetting');
+            const lightingInput = document.getElementById('lighting');
+            const atmosphereInput = document.getElementById('atmosphere');
+            const cameraInput = document.getElementById('camera');
+            const detailsInput = document.getElementById('details');
+            const artistInput = document.getElementById('artist');
+            const qualityInput = document.getElementById('quality');
+            const generateBtn = document.getElementById('generateBtn');
+            const finalPromptIdDiv = document.getElementById('finalPromptId');
+            const finalPromptEnDiv = document.getElementById('finalPromptEn');
+            const copyBtnId = document.getElementById('copyBtnId');
+            const copyBtnEn = document.getElementById('copyBtnEn');
+            const messageBox = document.getElementById('messageBox');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // Function to show a temporary message
+            function showMessage(message, type = 'success') {
+                messageBox.textContent = message;
+                messageBox.className = `message-box show ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+                setTimeout(() => {
+                    messageBox.classList.remove('show');
+                }, 2000);
+            }
+
+            // Function to call LLM for translation
+            async function translateText(text, targetLanguage) {
+                loadingIndicator.classList.add('show');
+                try {
+                    let chatHistory = [];
+                    // Modified prompt to ensure only the translated text is returned
+                    chatHistory.push({ role: "user", parts: [{ text: `Translate ONLY the following Indonesian text to ${targetLanguage}. Do not add any extra words, conversational phrases, or introductory/concluding remarks. Provide only the translated text: "${text}"` }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // Canvas will provide this at runtime
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        console.error('Translation failed: Unexpected API response structure', result);
+                        return null;
+                    }
+                } catch (error) {
+                    console.error('Error during translation:', error);
+                    showMessage('Gagal menerjemahkan prompt.', 'error');
+                    return null;
+                } finally {
+                    loadingIndicator.classList.remove('show');
+                }
+            }
+
+            // Function to generate the prompt
+            generateBtn.addEventListener('click', async () => {
+                const promptPartsId = [];
+
+                // Collect values for Indonesian prompt
+                if (subjectInput.value.trim()) promptPartsId.push(subjectInput.value.trim());
+                if (actionSettingInput.value.trim()) promptPartsId.push(actionSettingInput.value.trim());
+                if (styleInput.value.trim()) promptPartsId.push(styleInput.value.trim());
+                if (lightingInput.value.trim()) promptPartsId.push(lightingInput.value.trim());
+                if (atmosphereInput.value.trim()) promptPartsId.push(atmosphereInput.value.trim());
+                if (cameraInput.value.trim()) promptPartsId.push(cameraInput.value.trim());
+                if (detailsInput.value.trim()) promptPartsId.push(detailsInput.value.trim());
+                if (artistInput.value.trim()) promptPartsId.push(artistInput.value.trim());
+                if (qualityInput.value.trim()) promptPartsId.push(qualityInput.value.trim());
+
+                const finalPromptId = promptPartsId.filter(part => part !== '').join(', ');
+                finalPromptIdDiv.textContent = finalPromptId || "Isi beberapa kolom untuk membuat prompt...";
+
+                // Translate to English
+                if (finalPromptId) {
+                    const finalPromptEn = await translateText(finalPromptId, 'English');
+                    finalPromptEnDiv.textContent = finalPromptEn || "Failed to translate prompt. Please try again.";
+                } else {
+                    finalPromptEnDiv.textContent = "Fill in some fields to create a prompt...";
+                }
+            });
+
+            // Function to copy text to clipboard
+            function copyToClipboard(text, successMessage, errorMessage) {
+                if (text && (text !== "Isi beberapa kolom untuk membuat prompt..." && text !== "Fill in some fields to create a prompt..." && text !== "Failed to translate prompt. Please try again.")) {
+                    try {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        showMessage(successMessage);
+                    } catch (err) {
+                        showMessage(errorMessage, 'error');
+                        console.error('Failed to copy text: ', err);
+                    }
+                } else {
+                    showMessage(errorMessage, 'error');
+                }
+            }
+
+            // Event listeners for copy buttons
+            copyBtnId.addEventListener('click', () => {
+                copyToClipboard(finalPromptIdDiv.textContent, 'Prompt Bahasa Indonesia berhasil disalin!', 'Tidak ada prompt Bahasa Indonesia untuk disalin.');
+            });
+
+            copyBtnEn.addEventListener('click', () => {
+                copyToClipboard(finalPromptEnDiv.textContent, 'English prompt copied successfully!', 'No English prompt to copy.');
+            });
+        });
+    </script>
+</body>
+</html>
