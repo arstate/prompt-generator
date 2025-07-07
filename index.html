@@ -111,6 +111,10 @@
 </head>
 <body class="p-4 sm:p-6 md:p-8">
     <div class="container mx-auto bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-lg border border-gray-200">
+        <!-- Logo ARSTATE.AI -->
+        <div class="text-center mb-4">
+            <span class="text-4xl font-extrabold text-blue-900">ARSTATE.AI</span>
+        </div>
         <h1 class="text-3xl sm:text-4xl font-bold text-center mb-8 text-gray-800">AI Image Prompt Generator</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -175,16 +179,9 @@
 
         <div id="loadingIndicator" class="loading-indicator">Menerjemahkan prompt...</div>
 
-        <!-- Indonesian Prompt Output -->
-        <div class="output-area relative">
-            <label class="block text-sm font-semibold mb-2 text-gray-800">Prompt Final (Bahasa Indonesia):</label>
-            <div id="finalPromptId" class="text-gray-700">Prompt Anda akan muncul di sini...</div>
-            <button id="copyBtnId" class="copy-btn">Salin</button>
-        </div>
-
         <!-- English Prompt Output -->
         <div class="output-area relative">
-            <label class="block text-sm font-semibold mb-2 text-gray-800">Final Prompt (English):</label>
+            <label class="block text-sm font-semibold mb-2 text-gray-800">FINAL PROMPT:</label>
             <div id="finalPromptEn" class="text-gray-700">Your prompt will appear here...</div>
             <button id="copyBtnEn" class="copy-btn">Copy</button>
         </div>
@@ -204,9 +201,7 @@
             const artistInput = document.getElementById('artist');
             const qualityInput = document.getElementById('quality');
             const generateBtn = document.getElementById('generateBtn');
-            const finalPromptIdDiv = document.getElementById('finalPromptId');
             const finalPromptEnDiv = document.getElementById('finalPromptEn');
-            const copyBtnId = document.getElementById('copyBtnId');
             const copyBtnEn = document.getElementById('copyBtnEn');
             const messageBox = document.getElementById('messageBox');
             const loadingIndicator = document.getElementById('loadingIndicator');
@@ -225,7 +220,6 @@
                 loadingIndicator.classList.add('show');
                 try {
                     let chatHistory = [];
-                    // Modified prompt to ensure only the translated text is returned
                     chatHistory.push({ role: "user", parts: [{ text: `Translate ONLY the following Indonesian text to ${targetLanguage}. Do not add any extra words, conversational phrases, or introductory/concluding remarks. Provide only the translated text: "${text}"` }] });
                     const payload = { contents: chatHistory };
                     const apiKey = "AIzaSyD6NcvJ_VBsftbcfxg8v6JawVuBnDhUYfE"; // API key Anda telah dimasukkan di sini
@@ -270,11 +264,11 @@
                 if (qualityInput.value.trim()) promptPartsId.push(qualityInput.value.trim());
 
                 const finalPromptId = promptPartsId.filter(part => part !== '').join(', ');
-                finalPromptIdDiv.textContent = finalPromptId || "Isi beberapa kolom untuk membuat prompt...";
-
+                
                 // Translate to English
+                let finalPromptEn = "";
                 if (finalPromptId) {
-                    const finalPromptEn = await translateText(finalPromptId, 'English');
+                    finalPromptEn = await translateText(finalPromptId, 'English');
                     finalPromptEnDiv.textContent = finalPromptEn || "Failed to translate prompt. Please try again.";
                 } else {
                     finalPromptEnDiv.textContent = "Fill in some fields to create a prompt...";
@@ -301,13 +295,9 @@
                 }
             }
 
-            // Event listeners for copy buttons
-            copyBtnId.addEventListener('click', () => {
-                copyToClipboard(finalPromptIdDiv.textContent, 'Prompt Bahasa Indonesia berhasil disalin!', 'Tidak ada prompt Bahasa Indonesia untuk disalin.');
-            });
-
+            // Event listener for copy button
             copyBtnEn.addEventListener('click', () => {
-                copyToClipboard(finalPromptEnDiv.textContent, 'English prompt copied successfully!', 'No English prompt to copy.');
+                copyToClipboard(finalPromptEnDiv.textContent, 'Prompt berhasil disalin!', 'Tidak ada prompt untuk disalin.');
             });
         });
     </script>
