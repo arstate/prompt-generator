@@ -1,305 +1,461 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Prompt Generator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
-        }
-        .container {
-            max-width: 900px;
-        }
-        .input-group label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #334155;
-        }
-        .input-group input, .input-group textarea {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #cbd5e1;
-            background-color: #ffffff;
-            font-size: 1rem;
-            color: #1a202c;
-            transition: border-color 0.2s ease-in-out;
-        }
-        .input-group input:focus, .input-group textarea:focus {
-            outline: none;
-            border-color: #3b82f6; /* Blue-500 */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Blue-500 with opacity */
-        }
-        .btn-primary {
-            background-color: #3b82f6; /* Blue-500 */
-            color: #ffffff;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 700;
-            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-        }
-        .btn-primary:hover {
-            background-color: #2563eb; /* Blue-600 */
-            transform: translateY(-1px);
-        }
-        .btn-primary:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
-        .output-area {
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            min-height: 120px;
-            font-size: 1rem;
-            color: #1a202c;
-            white-space: pre-wrap; /* Ensures line breaks are preserved */
-            word-break: break-word; /* Prevents long words from overflowing */
-            position: relative;
-            margin-bottom: 1.5rem; /* Add margin between output areas */
-        }
-        .copy-btn {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background-color: #60a5fa; /* Blue-400 */
-            color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .copy-btn:hover {
-            background-color: #3b82f6; /* Blue-500 */
-        }
-        .message-box {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #4CAF50; /* Green */
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            z-index: 1000;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-        .message-box.show {
-            display: block;
-            opacity: 1;
-        }
-        .loading-indicator {
-            display: none;
-            text-align: center;
-            margin-top: 1rem;
-            color: #3b82f6;
-            font-weight: 600;
-        }
-        .loading-indicator.show {
-            display: block;
-        }
-    </style>
-</head>
-<body class="p-4 sm:p-6 md:p-8">
-    <div class="container mx-auto bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-lg border border-gray-200">
-        <!-- Logo ARSTATE.AI -->
-        <div class="text-center mb-4">
-            <span class="text-4xl font-extrabold text-blue-900">ARSTATE.AI</span>
-        </div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-8 text-gray-800">AI Image Prompt Generator</h1>
+import React, { useState } from 'react';
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- Subject/Main Object -->
-            <div class="input-group">
-                <label for="subject" class="block text-sm mb-2">Subjek/Objek Utama:</label>
-                <input type="text" id="subject" placeholder="Contoh: Kucing, Pohon Tua, Kota Masa Depan" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
+// Main application component
+const App = () => {
+    // State for structured prompt inputs
+    const [mainSubject, setMainSubject] = useState('');
+    const [artisticStyle, setArtisticStyle] = useState('');
+    const [actionSetting, setActionSetting] = useState('');
+    const [lighting, setLighting] = useState('');
+    const [mood, setMood] = useState('');
+    const [cameraAngle, setCameraAngle] = useState('');
+    const [additionalDetails, setAdditionalDetails] = useState('');
+    const [artistReference, setArtistReference] = useState('');
+    const [qualityResolution, setQualityResolution] = useState('');
 
-            <!-- Style -->
-            <div class="input-group">
-                <label for="style" class="block text-sm mb-2">Gaya Artistik:</label>
-                <input type="text" id="style" placeholder="Contoh: Photorealistic, Oil Painting, Anime, Cyberpunk" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
+    // State to store the improved, English AI prompt generated by the LLM
+    const [improvedPrompt, setImprovedPrompt] = useState('');
+    // State to store the URL of the generated image (will include watermark)
+    const [imageUrl, setImageUrl] = useState('');
+    // State to manage the loading status for prompt generation
+    const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
+    // State to manage the loading status for image generation
+    const [isLoadingImage, setIsLoadingImage] = useState(false);
+    // State to store error messages if any issue occurs
+    const [error, setError] = useState('');
 
-            <!-- Action/Setting -->
-            <div class="input-group">
-                <label for="actionSetting" class="block text-sm mb-2">Aksi/Pengaturan (Latar Belakang):</label>
-                <input type="text" id="actionSetting" placeholder="Contoh: Melompat di atas awan, Hutan berkabut, Jalanan kota di malam hari" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
+    // Function to handle changes in any prompt input field
+    const handleChange = (setter) => (e) => {
+        setter(e.target.value);
+        // Clear improved prompt and image when any input changes
+        setImprovedPrompt('');
+        setImageUrl('');
+        setError('');
+    };
 
-            <!-- Lighting -->
-            <div class="input-group">
-                <label for="lighting" class="block text-sm mb-2">Pencahayaan:</label>
-                <input type="text" id="lighting" placeholder="Contoh: Golden hour, Neon lights, Soft studio light" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
+    // Function to generate an improved English prompt using an LLM
+    const generateImprovedPrompt = async () => {
+        setError('');
+        setImprovedPrompt('');
+        setIsLoadingPrompt(true);
 
-            <!-- Atmosphere/Mood -->
-            <div class="input-group">
-                <label for="atmosphere" class="block text-sm mb-2">Suasana/Mood:</label>
-                <input type="text" id="atmosphere" placeholder="Contoh: Tenang, Misterius, Futuristik, Epik" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
+        try {
+            const apiKey = ""; // API key will be automatically provided by the Canvas environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-            <!-- Camera Angle/Shot -->
-            <div class="input-group">
-                <label for="camera" class="block text-sm mb-2">Sudut Kamera/Jenis Bidikan:</label>
-                <input type="text" id="camera" placeholder="Contoh: Wide shot, Close-up, Low angle, Aerial view" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
+            const chatHistory = [];
+            // Construct the prompt for the LLM from all input fields
+            const promptForLLM = `You are an AI prompt engineer specializing in image generation. Your task is to take the following structured details and combine them into a single, highly descriptive, detailed, and effective English prompt for an AI image model. Enhance the prompt by adding evocative language, ensuring coherence, and optimizing it for high-quality image output. The output should only be the improved English prompt.
 
-            <!-- Details/Elements -->
-            <div class="input-group md:col-span-2">
-                <label for="details" class="block text-sm mb-2">Detail/Elemen Tambahan:</label>
-                <textarea id="details" rows="3" placeholder="Contoh: Daun berguguran, Robot kecil terbang, Refleksi di genangan air" class="resize-y focus:ring-blue-500 focus:border-blue-500"></textarea>
-            </div>
+Details provided:
+Subject/Main Object: ${mainSubject}
+Artistic Style: ${artisticStyle}
+Action/Setting (Background): ${actionSetting}
+Lighting: ${lighting}
+Mood/Atmosphere: ${mood}
+Camera Angle/Shot Type: ${cameraAngle}
+Additional Details/Elements: ${additionalDetails}
+Artist/Reference (Optional): ${artistReference}
+Quality/Resolution (Optional): ${qualityResolution}
 
-            <!-- Artist/Reference (Optional) -->
-            <div class="input-group">
-                <label for="artist" class="block text-sm mb-2">Artis/Referensi (Opsional):</label>
-                <input type="text" id="artist" placeholder="Contoh: by Greg Rutkowski, in the style of Studio Ghibli" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
+Generate the improved English prompt:`;
 
-            <!-- Quality/Resolution (Optional) -->
-            <div class="input-group">
-                <label for="quality" class="block text-sm mb-2">Kualitas/Resolusi (Opsional):</label>
-                <input type="text" id="quality" placeholder="Contoh: 4K, Ultra detailed, Masterpiece, Trending on Artstation" class="focus:ring-blue-500 focus:border-blue-500">
-            </div>
-        </div>
+            chatHistory.push({ role: "user", parts: [{ text: promptForLLM }] });
 
-        <div class="text-center mb-8">
-            <button id="generateBtn" class="btn-primary">Buat Prompt</button>
-        </div>
+            const payload = {
+                contents: chatHistory
+            };
 
-        <div id="loadingIndicator" class="loading-indicator">Menerjemahkan prompt...</div>
-
-        <!-- English Prompt Output -->
-        <div class="output-area relative">
-            <label class="block text-sm font-semibold mb-2 text-gray-800">FINAL PROMPT:</label>
-            <div id="finalPromptEn" class="text-gray-700">Your prompt will appear here...</div>
-            <button id="copyBtnEn" class="copy-btn">Copy</button>
-        </div>
-    </div>
-
-    <div id="messageBox" class="message-box"></div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const subjectInput = document.getElementById('subject');
-            const styleInput = document.getElementById('style');
-            const actionSettingInput = document.getElementById('actionSetting');
-            const lightingInput = document.getElementById('lighting');
-            const atmosphereInput = document.getElementById('atmosphere');
-            const cameraInput = document.getElementById('camera');
-            const detailsInput = document.getElementById('details');
-            const artistInput = document.getElementById('artist');
-            const qualityInput = document.getElementById('quality');
-            const generateBtn = document.getElementById('generateBtn');
-            const finalPromptEnDiv = document.getElementById('finalPromptEn');
-            const copyBtnEn = document.getElementById('copyBtnEn');
-            const messageBox = document.getElementById('messageBox');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-
-            // Function to show a temporary message
-            function showMessage(message, type = 'success') {
-                messageBox.textContent = message;
-                messageBox.className = `message-box show ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-                setTimeout(() => {
-                    messageBox.classList.remove('show');
-                }, 2000);
-            }
-
-            // Function to call LLM for translation
-            async function translateText(text, targetLanguage) {
-                loadingIndicator.classList.add('show');
-                try {
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: `Translate ONLY the following Indonesian text to ${targetLanguage}. Do not add any extra words, conversational phrases, or introductory/concluding remarks. Provide only the translated text: "${text}"` }] });
-                    const payload = { contents: chatHistory };
-                    const apiKey = "AIzaSyD6NcvJ_VBsftbcfxg8v6JawVuBnDhUYfE"; // API key Anda telah dimasukkan di sini
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    const result = await response.json();
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        return result.candidates[0].content.parts[0].text;
-                    } else {
-                        console.error('Translation failed: Unexpected API response structure', result);
-                        return null;
-                    }
-                } catch (error) {
-                    console.error('Error during translation:', error);
-                    showMessage('Gagal menerjemahkan prompt.', 'error');
-                    return null;
-                } finally {
-                    loadingIndicator.classList.remove('show');
-                }
-            }
-
-            // Function to generate the prompt
-            generateBtn.addEventListener('click', async () => {
-                const promptPartsId = [];
-
-                // Collect values for Indonesian prompt
-                if (subjectInput.value.trim()) promptPartsId.push(subjectInput.value.trim());
-                if (actionSettingInput.value.trim()) promptPartsId.push(actionSettingInput.value.trim());
-                if (styleInput.value.trim()) promptPartsId.push(styleInput.value.trim());
-                if (lightingInput.value.trim()) promptPartsId.push(lightingInput.value.trim());
-                if (atmosphereInput.value.trim()) promptPartsId.push(atmosphereInput.value.trim());
-                if (cameraInput.value.trim()) promptPartsId.push(cameraInput.value.trim());
-                if (detailsInput.value.trim()) promptPartsId.push(detailsInput.value.trim());
-                if (artistInput.value.trim()) promptPartsId.push(artistInput.value.trim());
-                if (qualityInput.value.trim()) promptPartsId.push(qualityInput.value.trim());
-
-                const finalPromptId = promptPartsId.filter(part => part !== '').join(', ');
-                
-                // Translate to English
-                let finalPromptEn = "";
-                if (finalPromptId) {
-                    finalPromptEn = await translateText(finalPromptId, 'English');
-                    finalPromptEnDiv.textContent = finalPromptEn || "Failed to translate prompt. Please try again.";
-                } else {
-                    finalPromptEnDiv.textContent = "Fill in some fields to create a prompt...";
-                }
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
-            // Function to copy text to clipboard
-            function copyToClipboard(text, successMessage, errorMessage) {
-                if (text && (text !== "Isi beberapa kolom untuk membuat prompt..." && text !== "Fill in some fields to create a prompt..." && text !== "Failed to translate prompt. Please try again.")) {
-                    try {
-                        const textarea = document.createElement('textarea');
-                        textarea.value = text;
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textarea);
-                        showMessage(successMessage);
-                    } catch (err) {
-                        showMessage(errorMessage, 'error');
-                        console.error('Failed to copy text: ', err);
-                    }
-                } else {
-                    showMessage(errorMessage, 'error');
-                }
+            let result;
+            try {
+                result = await response.json();
+            } catch (jsonError) {
+                const textResponse = await response.text();
+                throw new Error(`Failed to process LLM response. Response: "${textResponse}". JSON parsing error: ${jsonError.message}`);
             }
 
-            // Event listener for copy button
-            copyBtnEn.addEventListener('click', () => {
-                copyToClipboard(finalPromptEnDiv.textContent, 'Prompt berhasil disalin!', 'Tidak ada prompt untuk disalin.');
-            });
+            if (!response.ok) {
+                throw new Error(`Failed to generate improved prompt: ${result.error?.message || response.statusText}`);
+            }
+
+            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                setImprovedPrompt(result.candidates[0].content.parts[0].text);
+            } else {
+                setError('LLM response invalid or no improved prompt found.');
+            }
+
+        } catch (err) {
+            console.error("Error generating improved prompt:", err);
+            setError(`An error occurred while improving prompt: ${err.message}`);
+        } finally {
+            setIsLoadingPrompt(false);
+        }
+    };
+
+    // Function to add a watermark to a Base64 image
+    const addWatermark = (base64Data, watermarkText) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = `data:image/png;base64,${base64Data}`; // Assuming PNG, adjust if needed
+
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                ctx.drawImage(img, 0, 0); // Draw the original image
+
+                // Watermark styling
+                const fontSize = Math.max(16, img.height * 0.02); // Small, responsive font size (min 16px, or 2% of image height)
+                ctx.font = `bold ${fontSize}px Arial`; // Using Arial, bold
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'; // White with 70% transparency
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'bottom';
+
+                const padding = Math.max(10, img.height * 0.01); // Responsive padding (min 10px, or 1% of image height)
+                ctx.fillText(watermarkText, canvas.width - padding, canvas.height - padding);
+
+                resolve(canvas.toDataURL('image/png')); // Convert canvas to data URL
+            };
+            img.onerror = (e) => {
+                console.error("Error loading image for watermark:", e);
+                // If watermark fails, just resolve with original image data to not break functionality
+                resolve(`data:image/png;base64,${base64Data}`);
+            };
         });
-    </script>
-</body>
-</html>
+    };
+
+    // Function to generate the image
+    const generateImage = async () => {
+        setError('');
+        setImageUrl('');
+        setIsLoadingImage(true); // Use isLoadingImage for image generation
+
+        // Ensure there's an improved prompt before generating image
+        if (!improvedPrompt.trim()) {
+            setError('Please generate a prompt first using the "Buat Prompt" button.');
+            setIsLoadingImage(false);
+            return;
+        }
+
+        try {
+            // This code uses 'imagen-3.0-generate-002'.
+            // If you intend to use 'black-forest-labs/FLUX.1-kontext-dev' (from Together AI),
+            // you will need a separate backend proxy as it cannot be called directly from the browser.
+            const apiKey = ""; // API key will be automatically provided by the Canvas environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            // Payload for the 'imagen-3.0-generate-002' API request.
+            // Now uses the improvedPrompt.
+            const payload = {
+                instances: { prompt: improvedPrompt }, // Use improvedPrompt here
+                parameters: {
+                    "sampleCount": 1
+                }
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let result;
+            try {
+                result = await response.json();
+            } catch (jsonError) {
+                const textResponse = await response.text();
+                throw new Error(`Failed to process API response. Response: "${textResponse}". JSON parsing error: ${jsonError.message}`);
+            }
+
+            if (!response.ok) {
+                throw new Error(`Failed to generate image: ${result.error?.message || response.statusText}`);
+            }
+
+            if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                const base64Image = result.predictions[0].bytesBase64Encoded;
+                // Add watermark to the generated image
+                const watermarkedImageUrl = await addWatermark(base64Image, "ARSTATE.AI");
+                setImageUrl(watermarkedImageUrl);
+            } else {
+                setError('Invalid API response or image not found in expected format.');
+            }
+
+        } catch (err) {
+            console.error("Error generating image:", err);
+            setError(`An error occurred: ${err.message}`);
+        } finally {
+            setIsLoadingImage(false); // Set loading to false after the process completes
+        }
+    };
+
+    // Function to handle image download
+    const handleDownloadImage = () => {
+        if (imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'arstate_ai_generated_image.png'; // Default filename with ARSTATE.AI prefix
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
+    // Check if any prompt input field has content to enable the "Buat Prompt" button
+    const isAnyPromptFieldFilled = [
+        mainSubject, artisticStyle, actionSetting, lighting, mood,
+        cameraAngle, additionalDetails, artistReference, qualityResolution
+    ].some(field => field.trim() !== '');
+
+    return (
+        // Main container with Tailwind CSS styling for responsiveness and appearance
+        <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-4 font-sans">
+            <div className="bg-white p-8 rounded-xl shadow-2xl w-full md:max-w-4xl lg:max-w-5xl text-center">
+                <h1 className="text-4xl font-bold text-gray-800 mb-6">ARSTATE.AI</h1>
+                <h2 className="text-2xl font-semibold text-gray-700 mb-6">AI Image Prompt Generator</h2>
+
+                {/* Structured Prompt Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-left">
+                    {/* Subjek/Objek Utama */}
+                    <div>
+                        <label htmlFor="mainSubject" className="block text-gray-700 text-sm font-bold mb-2">
+                            Subjek/Objek Utama:
+                        </label>
+                        <input
+                            id="mainSubject"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: Kucing, Pohon Tua, Kota Masa Depan"
+                            value={mainSubject}
+                            onChange={handleChange(setMainSubject)}
+                        />
+                    </div>
+
+                    {/* Gaya Artistik */}
+                    <div>
+                        <label htmlFor="artisticStyle" className="block text-gray-700 text-sm font-bold mb-2">
+                            Gaya Artistik:
+                        </label>
+                        <input
+                            id="artisticStyle"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: Photorealistic, Oil Painting, Anime, Cyberpunk"
+                            value={artisticStyle}
+                            onChange={handleChange(setArtisticStyle)}
+                        />
+                    </div>
+
+                    {/* Aksi/Pengaturan (Latar Belakang) */}
+                    <div className="md:col-span-2">
+                        <label htmlFor="actionSetting" className="block text-gray-700 text-sm font-bold mb-2">
+                            Aksi/Pengaturan (Latar Belakang):
+                        </label>
+                        <input
+                            id="actionSetting"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: Melompat di atas awan, Hutan berkabut, Jalanan kota"
+                            value={actionSetting}
+                            onChange={handleChange(setActionSetting)}
+                        />
+                    </div>
+
+                    {/* Pencahayaan */}
+                    <div>
+                        <label htmlFor="lighting" className="block text-gray-700 text-sm font-bold mb-2">
+                            Pencahayaan:
+                        </label>
+                        <input
+                            id="lighting"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: Golden hour, Neon lights, Soft studio light"
+                            value={lighting}
+                            onChange={handleChange(setLighting)}
+                        />
+                    </div>
+
+                    {/* Suasana/Mood */}
+                    <div>
+                        <label htmlFor="mood" className="block text-gray-700 text-sm font-bold mb-2">
+                            Suasana/Mood:
+                        </label>
+                        <input
+                            id="mood"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: Tenang, Misterius, Futuristik, Epik"
+                            value={mood}
+                            onChange={handleChange(setMood)}
+                        />
+                    </div>
+
+                    {/* Sudut Kamera/Jenis Bidikan */}
+                    <div>
+                        <label htmlFor="cameraAngle" className="block text-gray-700 text-sm font-bold mb-2">
+                            Sudut Kamera/Jenis Bidikan:
+                        </label>
+                        <input
+                            id="cameraAngle"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: Wide shot, Close-up, Low angle, Aerial view"
+                            value={cameraAngle}
+                            onChange={handleChange(setCameraAngle)}
+                        />
+                    </div>
+
+                    {/* Detail/Elemen Tambahan */}
+                    <div className="md:col-span-2">
+                        <label htmlFor="additionalDetails" className="block text-gray-700 text-sm font-bold mb-2">
+                            Detail/Elemen Tambahan:
+                        </label>
+                        <textarea
+                            id="additionalDetails"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 resize-none"
+                            rows="2"
+                            placeholder="Contoh: Daun berguguran, Robot kecil terbang, Refleksi di genangan air"
+                            value={additionalDetails}
+                            onChange={handleChange(setAdditionalDetails)}
+                        ></textarea>
+                    </div>
+
+                    {/* Artis/Referensi (Opsional) */}
+                    <div>
+                        <label htmlFor="artistReference" className="block text-gray-700 text-sm font-bold mb-2">
+                            Artis/Referensi (Opsional):
+                        </label>
+                        <input
+                            id="artistReference"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: by Greg Rutkowski, in the style of Studio Ghibli"
+                            value={artistReference}
+                            onChange={handleChange(setArtistReference)}
+                        />
+                    </div>
+
+                    {/* Kualitas/Resolusi (Opsional) */}
+                    <div>
+                        <label htmlFor="qualityResolution" className="block text-gray-700 text-sm font-bold mb-2">
+                            Kualitas/Resolusi (Opsional):
+                        </label>
+                        <input
+                            id="qualityResolution"
+                            type="text"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+                            placeholder="Contoh: 4K, Ultra detailed, Masterpiece, Trending on Art"
+                            value={qualityResolution}
+                            onChange={handleChange(setQualityResolution)}
+                        />
+                    </div>
+                </div>
+
+                {/* Button to generate improved prompt */}
+                <button
+                    onClick={generateImprovedPrompt}
+                    disabled={isLoadingPrompt || !isAnyPromptFieldFilled}
+                    className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-purple-700 transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg mb-6"
+                >
+                    {isLoadingPrompt ? 'Membuat Prompt...' : 'Buat Prompt'}
+                </button>
+
+                {/* Display area for improved prompt */}
+                {improvedPrompt && (
+                    <div className="mb-6 text-left">
+                        <label htmlFor="improvedPrompt" className="block text-gray-700 text-sm font-bold mb-2">
+                            Prompt AI yang Dihasilkan (Bahasa Inggris):
+                        </label>
+                        <textarea
+                            id="improvedPrompt"
+                            className="w-full p-4 border border-gray-300 rounded-lg bg-gray-50 text-gray-800 focus:outline-none resize-none"
+                            rows="6" // Increased rows for better visibility
+                            value={improvedPrompt}
+                            readOnly // Make it read-only
+                        ></textarea>
+                    </div>
+                )}
+
+                {/* Button to generate image */}
+                <button
+                    onClick={generateImage}
+                    disabled={isLoadingImage || !improvedPrompt.trim()} // Disable if image is loading or improved prompt is empty
+                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                    {isLoadingImage ? 'Membuat Gambar...' : 'Buat Gambar'}
+                </button>
+
+                {/* Area to display error messages */}
+                {error && (
+                    <div className="mt-6 p-4 bg-red-100 text-red-700 rounded-lg border border-red-300">
+                        <p className="font-medium">Error:</p>
+                        <p>{error}</p>
+                    </div>
+                )}
+
+                {/* Area to display the generated image */}
+                {imageUrl && (
+                    <div className="mt-8">
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Gambar Anda:</h2>
+                        <div className="relative w-full h-auto rounded-lg shadow-xl border border-gray-200">
+                            <img
+                                src={imageUrl}
+                                alt="AI generated image"
+                                className="w-full h-full object-contain rounded-lg"
+                                onError={(e) => {
+                                    e.target.onerror = null; // Prevent infinite loop
+                                    e.target.src = "https://placehold.co/400x300/CCCCCC/333333?text=Gambar+Tidak+Dapat+Dimuat"; // Placeholder if image fails to load
+                                    setError('Failed to load the generated image. Please try again.');
+                                }}
+                            />
+                        </div>
+                        {/* Download Button */}
+                        <button
+                            onClick={handleDownloadImage}
+                            className="mt-4 w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg"
+                        >
+                            Unduh Gambar
+                        </button>
+                    </div>
+                )}
+
+                {/* Loading indicator for prompt generation */}
+                {isLoadingPrompt && (
+                    <div className="mt-8 text-purple-600 text-lg font-medium">
+                        <div className="flex justify-center items-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Membuat prompt, mohon tunggu...
+                        </div>
+                    </div>
+                )}
+
+                {/* Loading indicator for image generation */}
+                {isLoadingImage && !imageUrl && (
+                    <div className="mt-8 text-blue-600 text-lg font-medium">
+                        <div className="flex justify-center items-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Membuat gambar, mohon tunggu...
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default App;
