@@ -228,8 +228,8 @@
                     // Modified prompt to ensure only the translated text is returned
                     chatHistory.push({ role: "user", parts: [{ text: `Translate ONLY the following Indonesian text to ${targetLanguage}. Do not add any extra words, conversational phrases, or introductory/concluding remarks. Provide only the translated text: "${text}"` }] });
                     const payload = { contents: chatHistory };
-                    const apiKey = "AIzaSyD6NcvJ_VBsftbcfxg8v6JawVuBnDhUYfE"; // Canvas will provide this at runtime
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${AIzaSyD6NcvJ_VBsftbcfxg8v6JawVuBnDhUYfE}`;
+                    const apiKey = "AIzaSyD6NcvJ_VBsftbcfxg8v6JawVuBnDhUYfE"; // API key Anda telah dimasukkan di sini
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                     const response = await fetch(apiUrl, {
                         method: 'POST',
